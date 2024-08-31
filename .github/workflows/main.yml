@@ -58,6 +58,9 @@ jobs:
           source: "build/*"
           target: "/var/www/html/"
           debug: true
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
 
       - name: Restart Nginx
         uses: appleboy/ssh-action@v0.1.0
