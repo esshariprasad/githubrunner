@@ -29,7 +29,6 @@ jobs:
         with:
           name: build
           path: build
-jobs:
   deploy:
     runs-on: ubuntu-latest
 
