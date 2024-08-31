@@ -51,18 +51,17 @@ jobs:
         run: ls -R
         working-directory: build
 
-      - name: Debug SSH connection
+      - name: Create target directory
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
         run: |
-          echo "Debugging SSH connection..."
+          echo "Creating target directory..."
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
-          ssh -o StrictHostKeyChecking=no -vvv -i ~/.ssh/id_rsa $USER@$HOST echo "SSH connection successful"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $USER@$HOST 'sudo mkdir -p /var/www/html && sudo chown -R $USER:$USER /var/www/html'
 
       - name: Manual SCP File Transfer
         env:
@@ -71,7 +70,7 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
         run: |
           echo "Attempting manual SCP file transfer..."
-          scp -o StrictHostKeyChecking=no -vvv -i ~/.ssh/id_rsa -r build/* $USER@$HOST:/var/www/html/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r build/* $USER@$HOST:/var/www/html/
           echo "SCP completed"
 
       - name: Verify File Transfer
