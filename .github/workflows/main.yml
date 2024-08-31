@@ -45,29 +45,50 @@ jobs:
         with:
           name: build-artifact
           path: build
-        timeout-minutes: 15  # Increased timeout for download
+        timeout-minutes: 15
 
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: build
 
-      - name: Copy Files via SCP
-        uses: appleboy/scp-action@v0.1.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "build/*"
-          target: "/var/www/html/"
-          strip_components: 1
-          debug: true
-          timeout: 60m  # Increased timeout for SCP
+      - name: Debug SSH connection
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "Debugging SSH connection..."
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no -vvv -i ~/.ssh/id_rsa $USER@$HOST echo "SSH connection successful"
+
+      - name: Manual SCP File Transfer
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "Attempting manual SCP file transfer..."
+          scp -o StrictHostKeyChecking=no -vvv -i ~/.ssh/id_rsa -r build/* $USER@$HOST:/var/www/html/
+          echo "SCP completed"
+
+      - name: Verify File Transfer
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "Verifying file transfer..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $USER@$HOST ls -R /var/www/html/
 
       - name: Restart Nginx
-        uses: appleboy/ssh-action@v0.1.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: sudo systemctl restart nginx
-          timeout: 30m  # Increased timeout for SSH action
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "Restarting Nginx..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $USER@$HOST sudo systemctl restart nginx
+          echo "Nginx restarted"
