@@ -32,8 +32,7 @@ jobs:
       run: echo "Hello ${{ inputs.name }}"
 
     - name: Decode PEM Key
-      run: echo "${{ secrets.EC2_KEY }}" 
-      
+      run: echo "${{ secrets.EC2_KEY }}" >> /tmp/your-key.pem
 
     - name: Test SSH Connection
       run: |
