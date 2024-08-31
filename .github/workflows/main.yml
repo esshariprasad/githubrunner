@@ -29,7 +29,6 @@ jobs:
         with:
           name: build
           path: build
-
   deploy:
     runs-on: ubuntu-latest
     needs: build  # Ensures that the deploy job runs only after the build job is successful
