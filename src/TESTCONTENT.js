@@ -5,7 +5,7 @@ import React from "react"
     return(
         <>
         <h1>This is test content</h1>
-        <h4>automated deployement 1</h4>
+        <h4>automated deployement preview</h4>
         </>
     )
 
